@@ -1,4 +1,4 @@
-#summary Building mod_vhost_dbd and mod_log_dbd
+#summary Building the dbd-modules
 #labels Phase-Deploy,Phase-Implementation
 
 = Building mod_vhost_dbd and mod_log_dbd =
