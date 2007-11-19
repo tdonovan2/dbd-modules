@@ -64,6 +64,7 @@ DBDocRoot HostLookup  HOSTNAME
    URI6 is /alpha/beta/gamma/delta/index.html
    ...
    URI9 is /alpha/beta/gamma/delta/index.html
+   URI  is /alpha/beta/gamma/delta/index.html
 }}}
 
-  * If [http://httpd.apache.org/modules/ mod_ftp] is used, an additional *PARAM* name is available.  *FTPUSER* can be specified to pass the logged-in FTP user name.  
+  * If [http://httpd.apache.org/modules/ mod_ftp] is used, an additional *PARAM* name is available.  *FTPUSER* can be specified to pass the logged-in FTP user name.  This parameter is not available for HTTP requests.
