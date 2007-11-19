@@ -1,4 +1,4 @@
-Configuring and using mod_vhost_dbd
+#Configuring and using mod_vhost_dbd
 
 = Introduction =
 mod_vhost_dbd has one directive:
