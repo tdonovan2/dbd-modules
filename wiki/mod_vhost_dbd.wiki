@@ -19,11 +19,11 @@ DBDocRoot can be used at the Server or the Virtual Host level.
 *QUERY* is an SQL statement which returns one row with the document root directory name in the first column.
 
 *PARAM ...* arguments are inserted into the SQL statement at request time.  Use one *PARAM* for each parameter marker in your SQL statement.  In the examples, *?* is the parameter marker.  *PARAM* may be any of these words (space separated, not case sensitive):
-|| *HOSTNAME*||Hostname||The Hostname may be NULL if there is no Host header. e.g. HTTP 1.0 requests||
-|| *IP*||Host IP address||as a string||
-|| *PORT*||port number||as string||
-|| *URI*||The request URI||
-|| *URI`n`* _where_ *`n`* _is 1-9_ ||Pass only the first `n` segments of the URI to the query||
+|| *HOSTNAME*||requested hostname|| _may be NULL if there is no Host header. e.g. HTTP 1.0 requests_ ||
+|| *IP*||host IP address|| _as a string, never NULL_ ||
+|| *PORT*||host port number|| _as string, never NULL_ ||
+|| *URI*||The request URI|| _never NULL_ ||
+|| *URI`n`* _where_ *`n`* _is 1-9_ ||Pass only the first `n` segments of the URI to the query|| _never NULL_ ||
 
   * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_vhost_dbd.
 
@@ -32,9 +32,11 @@ DBDocRoot can be used at the Server or the Virtual Host level.
 LoadModule vhost_dbd_module modules/mod_vhost_dbd.so 
 }}}
 
+  * If your query returns no rows, the existing document root is used.  If your query returns more than one row, the request is rejected with a _500 Internal Server Error_.
+
   * Do not put a semicolon at the end of your SQL statement.
 
-  * *PARAM* names can be used repeated as necessary. For example: to only look up hosts containing ".acme.":
+  * *PARAM* names can be repeated as necessary. For example: to only look up hosts containing ".acme.":
 {{{
         DBDocRoot "SELECT DocRoot FROM myTable WHERE ? LIKE '%.acme.%' AND Host = ?" HOSTNAME HOSTNAME
 }}}
@@ -68,3 +70,5 @@ DBDocRoot HostLookup  HOSTNAME
 }}}
 
   * If [http://httpd.apache.org/modules/ mod_ftp] is used, an additional *PARAM* name is available.  *FTPUSER* can be specified to pass the logged-in FTP user name.  This parameter is not available for HTTP requests.
+
+  * Setting *[http://httpd.apache.org/docs/2.3/mod/core.html#loglevel LogLevel] debug* will print additional information in the Apache error log which can help you diagnose SQL query problems.
