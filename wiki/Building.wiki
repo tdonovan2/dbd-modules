@@ -1,4 +1,4 @@
-#summary Building the dbd-modules
+#summary Compiling, linking, and installing dbd-modules
 #labels Phase-Implementation
 
 = Building mod_vhost_dbd and mod_log_dbd =
