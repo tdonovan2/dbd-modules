@@ -25,7 +25,7 @@ DBDocRoot can be used at the Server or the Virtual Host level.
 || *URI*||The request URI|| _never NULL_ ||
 || *URI`n`* _where_ *`n`* _is 1-9_ ||Pass only the first `n` segments of the URI to the query|| _never NULL_ ||
 
-  * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_vhost_dbd.
+  * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] (e.g.  the [http://odbc-dbd.googlecode.com/ odbc-dbd driver]) and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_vhost_dbd.
 
   * Use [http://httpd.apache.org/docs/2.3/mod/mod_so.html#loadmodule LoadModule] to enable mod_vhost_dbd.
 {{{
@@ -36,9 +36,9 @@ LoadModule vhost_dbd_module modules/mod_vhost_dbd.so
 
   * Do not put a semicolon at the end of your SQL statement.
 
-  * *PARAM* names can be repeated as necessary. For example: to only look up hosts containing ".acme.":
+  * *PARAM* names can be repeated as necessary. For example: to only look up hosts containing ".acme." for port 80 requests:
 {{{
-        DBDocRoot "SELECT DocRoot FROM myTable WHERE ? LIKE '%.acme.%' AND Host = ?" HOSTNAME HOSTNAME
+        DBDocRoot "SELECT DocRoot FROM myTable WHERE ? LIKE '%.acme.%' AND Host = ? AND ? = 80" HOSTNAME HOSTNAME PORT
 }}}
 
   * *DBDocRoot* can use the name of a statement previously defined with the DBDPrepareSQL directive as the *QUERY*. For example:
