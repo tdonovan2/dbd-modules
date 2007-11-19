@@ -71,4 +71,4 @@ DBDocRoot HostLookup  HOSTNAME
 
   * If [http://httpd.apache.org/modules/ mod_ftp] is used, an additional *PARAM* name is available.  *FTPUSER* can be specified to pass the logged-in FTP user name.  This parameter is not available for HTTP requests.
 
-  * Setting *[http://httpd.apache.org/docs/2.3/mod/core.html#loglevel LogLevel] debug* will print additional information in the Apache error log which can help you diagnose SQL query problems.
+  * Setting *[http://httpd.apache.org/docs/2.3/mod/core.html#loglevel LogLevel] debug* will print additional information in the Apache error log which can help to diagnose SQL query problems.
