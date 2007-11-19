@@ -1,5 +1,5 @@
 #summary Compiling, linking, and installing dbd-modules
-#labels Phase-Implementation
+#labels Phase-Implementation,Featured
 
 = Building mod_vhost_dbd and mod_log_dbd =
 == Windows ==
