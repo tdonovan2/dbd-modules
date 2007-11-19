@@ -1,4 +1,5 @@
 #summary Configuring and using mod_vhost_dbd
+#labels Featured
 
 = Introduction =
 mod_vhost_dbd has one directive:
