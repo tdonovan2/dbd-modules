@@ -1,0 +1,102 @@
+#summary Configuring and using mod_log_dbd
+#labels Featured,Phase-Deploy
+
+= Introduction =
+*mod_log_dbd* has one directive:
+
+=== DBDLog   FILENAME   QUERY    [ USENULLS ] ===
+
+*DBDLog* is always paired with a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive using the same file name.
+
+The *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* format must be a comma-separated list of [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html mod_log_config]  [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives]. 
+{{{
+CustomLog   logs/access.sql     "%h, %l, %u, %{%Y-%m-%d %H:%M:%S}t, %r, %>s, %b"
+DBDLog      logs/access.sql    "INSERT INTO log_table (Host, Rname, User, Tstmp, Request, Status, Bytes) VALUES (?, ?, ?, ?, ?, ?, ?)"
+}}}
+
+Only [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives], commas, and spaces can appear in the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* format.
+
+The *QUERY* parameters must correspond to the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
+
+DBDLog can be used at the Server or the Virtual Host level.
+
+= Details =
+*FILENAME* must match the filename used in the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive.
+
+*QUERY* is an SQL statement whose parameters match the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
+
+*USENULLS* causes any parameters which are a single hyphen to be inserted into the database as NULL values. Make sure both your DBD driver and your database can handle NULL values. The [http://odbc-dbd.googlecode.com/ odbc-dbd driver] v1.0.6 or higher and the PostgreSQL DBD driver can process NULL values.
+
+  * Apache requests will be logged to the database using the SQL statement. If the database cannot be accessed, the SQL statement (with the data inserted) is written to the file, and the error is written to the error log.
+
+  * Do not put any characters between the format codes in the log format except a comma and (optionally) spaces. Characters inside the curly braces of `%{...}` are OK, so the date  `%{Year:%Y Month:%m Day:%d}t` is acceptable.
+  
+  * If you have literal strings in your SQL statement, always enclose them in single-quotes; even if your database allows other forms, like enclosing literals in double-quotes. Your server may be vulnerable to SQL-injection attacks if you do not use single-quotes for string literals.
+  
+  * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] (e.g.  the [http://odbc-dbd.googlecode.com/ odbc-dbd driver]) and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_log_dbd.
+  
+  * You must have [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html mod_log_config] loaded and configured to use mod_log_dbd.
+
+  * Use [http://httpd.apache.org/docs/2.3/mod/mod_so.html#loadmodule LoadModule] to enable mod_log_dbd.
+{{{
+LoadModule log_dbd_module modules/mod_log_dbd.so 
+}}}
+
+  * *QUERY* should return no rows.  It is typically an SQL INSERT, UPDATE, or stored procedure call DML statement.
+
+  * Do not put a semicolon at the end of your SQL statement.
+
+  * Do not use DBDLog with a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#cookielog CookieLog]* directive. Use a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive with a `%{Cookie}n` format instead.
+
+
+  * *DBDLog* can use the name of a statement previously defined with the *[http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]* directive as the *QUERY*. For example:
+{{{
+LogFormat      "%V, %r"  dbFormat
+DBDPrepareSQL  "INSERT INTO log_table (Server, Url) VALUES (?, ?)"  dbLog
+...
+CustomLog logs/access.sql  dbFormat
+DBDLog    logs/access.sql  dbLog  UseNULLs
+}}}
+
+  * For Apache 2.2 use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
+
+  * For Apache 2.3+ always use *%s* as a parameter marker in your SQL statement.
+
+  * Setting *[http://httpd.apache.org/docs/2.3/mod/core.html#loglevel LogLevel] debug* will print additional information in the Apache error log which can help to diagnose SQL query problems.
+  
+= Database Considerations =
+== Suitable Databases for Logging ==
+
+Databases which do not support concurrent updates by multiple threads (MSAccess, SQLite, embedded databases, etc.) generally cannot be used for logging. 
+
+If you _must_ try to use such a database, set DBDMax = DBDMin = DBDKeep = 1 and do not use the database for any other purpose; like authorization, vhost lookup, etc.  
+
+Oracle, MySQL (especially with a MyISAM table), PostgreSQL, [http://db.apache.org/derby/ Apache Derby] _(as a Network Server)_, SQL Server, Sybase, etc. all work well for logging.
+
+== Indexes ==
+
+Database performance can be an issue when you use database logging.  
+
+It is often best to create a table with no primary key or indexes for capturing log entries. 
+
+You can move all the log records from this table into another indexed table periodically via an external process.  
+
+This will allow Apache to insert new log records quickly without the overhead of updating an index for every entry.
+
+== Dates and Times in Databases ==
+The default format for TIMESTAMP columns varies between databases.  The log format code `%{%Y-%m-%d %H:%M:%S}t` produces a string like '2007-10-29 14:22:13', which is acceptable as a TIMESTAMP or DATETIME field to most databases except Oracle.  
+
+The log format code `%{%Y-%m-%d}t` can likewise be used with most DATE columns and the format code `%{%H:%M:%S}t` with most TIME columns.
+
+Use `%{%d-%b-%y %I.%M.%S %p}t` for Oracle TIMESTAMP columns, which look like '08-NOV-07 11.15.13.000000 AM'.
+
+The time formats for `%{...}t` vary by platform.  The specific codes available are documented
+||for Linux at||       http://www.gnu.org/software/libc/manual/html_node/Formatting-Calendar-Time.html#index-strftime-2660||
+||for Windows at||     http://msdn2.microsoft.com/en-us/library/fe06s4ak(VS.80).aspx||
+||for AIX at||         http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.basetechref/doc/basetrf2/strftime.htm||
+||for Solaris at||     http://docs.sun.com/app/docs/doc/819-2243/6n4i099ji||
+||for HP-UX at||       http://docs.hp.com/en/B2355-60105/strftime.3C.html||
+||for Netware at||     http://developer.novell.com/documentation/libc/libc_vol2/data/sdk1810.html#sdk1810||
+
+== Recovery ==
+If the database is not accessible, SQL statements are be written to *FILENAME* in a format suitable for re-entering the data when the database becomes available again.
