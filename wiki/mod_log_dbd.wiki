@@ -75,7 +75,7 @@ DBDLog    logs/access.sql  dbLog  UseNULLs
 
 Databases which do not support concurrent updates by multiple threads (MSAccess, SQLite, embedded databases, etc.) generally cannot be used for logging. 
 
-If you _must_ try to use such a database, set DBDMax = DBDMin = DBDKeep = 1 and do not use the database for any other purpose; like authorization, vhost lookup, etc.  
+If you _must_ try to use such a database, set DBDMax, DBDMin, and DBDKeep to 1 and do not use the database for any other purpose; like authorization, vhost lookup, etc.  
 
 Oracle, MySQL (especially with a MyISAM table), PostgreSQL, [http://db.apache.org/derby/ Apache Derby] _(as a Network Server)_, SQL Server, Sybase, etc. all work well for logging.
 
