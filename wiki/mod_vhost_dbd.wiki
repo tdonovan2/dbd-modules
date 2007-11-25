@@ -41,7 +41,7 @@ LoadModule vhost_dbd_module modules/mod_vhost_dbd.so
         DBDocRoot "SELECT DocRoot FROM myTable WHERE ? LIKE '%.acme.%' AND Host = ? AND ? = 80" HOSTNAME HOSTNAME PORT
 }}}
 
-  * *DBDocRoot* can use the name of a statement previously defined with the DBDPrepareSQL directive as the *QUERY*. For example:
+  * *DBDocRoot* can use the name of a statement previously defined with the [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] directive as the *QUERY*. For example:
 {{{
 DBDPrepareSQL "SELECT WebDir FROM WebTable WHERE WebName = ?"  HostLookup
 ...
@@ -52,7 +52,7 @@ DBDocRoot HostLookup  HOSTNAME
 
   * For Apache 2.3+ always use *%s* as a parameter marker in your SQL statement.
 
-  * For Apache 2.3+, any additional columns which are returned will set an environment variable with the same name as the column name. If the column value is NULL, any existing environment variable which matches the column name will be unset.
+  * For Apache 2.3+, any additional columns which are returned will set an [http://httpd.apache.org/docs/2.3/env.html environment variable] with the same name as the column name. If the column value is NULL, any existing [http://httpd.apache.org/docs/2.3/env.html environment variable] which matches the column name will be unset.
 
   * Using a URI *PARAM* increases the number of database queries required because each request requires a new query. Using only the leading portion of the URI can reduce the number of queries. When multiple requests are made on the same keep-alive connection which have the same URI`n` value, only one query is needed.
 
