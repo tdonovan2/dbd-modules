@@ -12,8 +12,8 @@
                     "limitations under the License."
 
 1 	VERSIONINFO
-FILEVERSION     1,0,1,0
-PRODUCTVERSION  1,0,1,0
+FILEVERSION     1,0,2,0
+PRODUCTVERSION  1,0,2,0
 BEGIN
   BLOCK "StringFileInfo"
     BEGIN
@@ -22,10 +22,10 @@ BEGIN
           VALUE "Comments",         APACHE_LICENSE
           VALUE "OriginalFilename", "mod_vhost_dbd.so"
           VALUE "FileDescription",  "Apache DBD Virtual Host module"
-          VALUE "FileVersion",      "1.0.1.0"
+          VALUE "FileVersion",      "1.0.2.0"
           VALUE "LegalCopyright",   "Copyright 2007, Tom Donovan"
           VALUE "ProductName",      "mod_vhost_dbd"
-          VALUE "ProductVersion",   "1.0.1"
+          VALUE "ProductVersion",   "1.0.2"
       END
   END
   BLOCK "VarFileInfo"
