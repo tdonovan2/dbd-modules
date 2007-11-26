@@ -343,11 +343,9 @@ static void *log_writer_init(apr_pool_t *p, server_rec *s,
      */
     if (apr_hash_get(conf->files, name, APR_HASH_KEY_STRING))
         handle->name = apr_pstrdup(p, name);
-    /* init the old log writer for fallback */
-    if (handle->name) {
-        handle->old_handle = orig_writer_init(p, s, name);
-        handle->old_writer = orig_writer;
-    }
+    /* always init the old log writer for fallback */
+    handle->old_handle = orig_writer_init(p, s, name);
+    handle->old_writer = orig_writer;
     return handle;
 }
 
