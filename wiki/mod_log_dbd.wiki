@@ -55,7 +55,7 @@ LoadModule log_dbd_module modules/mod_log_dbd.so
   * Do not use DBDLog with a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#cookielog CookieLog]* directive. Use a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive with a `%{Cookie}n` format instead.
 
 
-  * *DBDLog* can use the name of a statement previously defined with the *[http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]* directive as the *QUERY*. Unfortunately, using a statement prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] prevents using *FILENAME* for database recovery because the original SQL statement is not available to *DBDLog*. For example:
+  * *DBDLog* can use the name of a statement previously defined with the *[http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]* directive as the *QUERY*. For example:
 {{{
 LogFormat      "%V, %r"  dbFormat
 DBDPrepareSQL  "INSERT INTO log_table (Server, Url) VALUES (?, ?)"  dbLog
@@ -64,6 +64,7 @@ CustomLog logs/access.sql  dbFormat
 DBDLog    logs/access.sql  dbLog  UseNULLs
 }}}
 
+  * Unfortunately, using a statement prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] precludes using *FILENAME* for database recovery because the original SQL statement text is not available to *DBDLog* when writing to *FILENAME*.
 
   * For Apache 2.2 use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
 
