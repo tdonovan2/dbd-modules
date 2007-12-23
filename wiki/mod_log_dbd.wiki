@@ -64,7 +64,7 @@ CustomLog logs/access.sql  dbFormat
 DBDLog    logs/access.sql  dbLog  UseNULLs
 }}}
 
-  * Unfortunately, using a statement prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] precludes using *FILENAME* for database recovery because the original SQL statement text is not available to *DBDLog* when writing to *FILENAME*.
+  * Unfortunately, using a statement prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] precludes using *FILENAME* for database recovery because the original SQL statement text is no longer available to *DBDLog* when writing to *FILENAME*.
 
   * For Apache 2.2 use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
 
