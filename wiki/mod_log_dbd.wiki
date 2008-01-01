@@ -77,7 +77,7 @@ DBDLog    logs/access.sql  dbLog  UseNULLs
 = Database Considerations =
 == Suitable Databases for Logging ==
 
-Databases which do not support concurrent updates by multiple threads, or which lock the entire database on update _(like SQLite)_ generally cannot be used successfully for logging. 
+Databases which do not support concurrent updates by multiple threads, or which lock the entire database on update _(like [http://www.sqlite.org SQLite])_ generally cannot be used successfully for logging. 
 
 If you _must_ try to use such a database, set [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmax DBDMax], [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmin DBDMin], and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdkeep DBDKeep] to 1 to prevent concurrent update attempts from the same Apache process.
 
