@@ -70,16 +70,20 @@ DBDLog    logs/access.sql  dbLog  UseNULLs
 
   * For Apache 2.3+ always use *%s* as a parameter marker in your SQL statement.
 
+  * If you do not want log entries to be saved to a file when the database is inaccessable, set *FILENAME* to *NUL* _(on Windows)_ or to */dev/null* _(on Unix)_.
+
   * Setting *[http://httpd.apache.org/docs/2.3/mod/core.html#loglevel LogLevel] debug* will print additional information in the Apache error log which can help to diagnose SQL query problems.
   
 = Database Considerations =
 == Suitable Databases for Logging ==
 
-Databases which do not support concurrent updates by multiple threads (MSAccess, SQLite, embedded databases, etc.) generally cannot be used for logging. 
+Databases which do not support concurrent updates by multiple threads, or which lock the entire database on update _(like SQLite)_ generally cannot be used successfully for logging. 
 
-If you _must_ try to use such a database, set [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmax DBDMax], [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmin DBDMin], and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdkeep DBDKeep] to 1 and do not use the database for any other purpose; like authorization, vhost lookup, etc.  
+If you _must_ try to use such a database, set [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmax DBDMax], [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmin DBDMin], and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdkeep DBDKeep] to 1 to prevent concurrent update attempts from the same Apache process.
 
-Oracle, MySQL (especially with a MyISAM table), PostgreSQL, [http://db.apache.org/derby/ Apache Derby] _(as a Network Server)_, SQL Server, Sybase, etc. all work well for logging.
+[http://www.oracle.com/database/index.html Oracle], [http://www.mysql.com/ MySQL] _(especially with a MyISAM table)_, [http://www.postgresql.org PostgreSQL], [http://db.apache.org/derby/ Apache Derby] _(as a Network Server)_, [http://www.microsoft.com/sql SQL Server], [http://www.sybase.com/products/databasemanagement Sybase], [http://firebirdsql.org Firebird] _(avoid using [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL])_ , etc. all work well for logging. 
+
+[http://office.microsoft.com/en-us/access Microsoft Access] works surprisingly well for modest-volume Apache servers on Windows.
 
 == Indexes ==
 
