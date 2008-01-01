@@ -64,7 +64,7 @@ CustomLog logs/access.sql  dbFormat
 DBDLog    logs/access.sql  dbLog  UseNULLs
 }}}
 
-  * Unfortunately, using a statement prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] precludes using *FILENAME* directly for database recovery because the original SQL statement text is no longer available to *DBDLog* when writing to *FILENAME*.  The prepared statement label is used as if it were a SQL function when writing to *FILENAME*.  You will need to edit *FILENAME* before it can be used for database recovery. Some databases (for example: Firebird) may report errors when statements for *DBDLog* are prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]. In this case, [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] cannot be used for log statements.
+  * Unfortunately, using a statement prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] precludes using *FILENAME* directly for database recovery because the original SQL statement text is no longer available to *DBDLog* when writing to *FILENAME*.  The prepared statement label is used as if it were a SQL function when writing to *FILENAME*.  You will need to edit *FILENAME* before it can be used for database recovery. Some databases (for example: [http://firebirdsql.org Firebird]) may report errors when statements for *DBDLog* are prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]. In this case, [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] cannot be used for log statements.
 
   * For Apache 2.2 use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
 
@@ -81,7 +81,7 @@ Databases which do not support concurrent updates by multiple threads, or which 
 
 If you _must_ try to use such a database, set [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmax DBDMax], [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdmin DBDMin], and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdkeep DBDKeep] to 1 to prevent concurrent update attempts from the same Apache process.
 
-[http://www.oracle.com/database/index.html Oracle], [http://www.mysql.com/ MySQL] _(especially with a MyISAM table)_, [http://www.postgresql.org PostgreSQL], [http://db.apache.org/derby/ Apache Derby] _(as a Network Server)_, [http://www.microsoft.com/sql SQL Server], [http://www.sybase.com/products/databasemanagement Sybase], [http://firebirdsql.org Firebird] _(avoid using [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL])_ , etc. all work well for logging. 
+[http://www.oracle.com/database/index.html Oracle], [http://www.mysql.com/ MySQL] _(especially with a MyISAM table)_, [http://www.postgresql.org PostgreSQL], [http://db.apache.org/derby/ Apache Derby] _(as a Network Server)_, [http://www.microsoft.com/sql SQL Server], [http://www.sybase.com/products/databasemanagement Sybase], [http://firebirdsql.org Firebird], etc. all work well for logging. 
 
 [http://office.microsoft.com/en-us/access Microsoft Access] works surprisingly well for modest-volume Apache servers on Windows.
 
