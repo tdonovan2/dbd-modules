@@ -111,7 +111,7 @@ static apr_status_t write_fallback_log(request_rec *r,
 {   
     const char **nstrs;
     int *nstrl;
-    char *start, *end;
+    char *start, *end, *sql;
     int inliteral, nsize, i=0, j=0;
     apr_size_t len;
 
@@ -132,7 +132,27 @@ static apr_status_t write_fallback_log(request_rec *r,
     nsize = nelts * 4 + 2;
     nstrs = (const char **) apr_pcalloc(r->pool, nsize * sizeof(char *));
     nstrl = (int *) apr_pcalloc(r->pool, nsize * sizeof(int));
-    start = end = (char *) file->stmt_sql;
+    if (isSimpleName(file->stmt_sql) && nelts) {
+        /* For a single WORD (probably created with DBDPrepareSQL) which has arguments
+         * generate pseudo-SQL like "WORD(?,?,?,...)" 
+         */
+        char *sptr;
+        int n;
+        sql = apr_pcalloc(r->pool, strlen(file->stmt_sql) + (nelts * 2) + 2);
+        sptr = sql;
+        sptr = apr_cpystrn(sptr, file->stmt_sql, MAX_LABEL_SIZE);
+        *sptr++ = '(';
+        *sptr++ = '?';
+        for (n=1 ; n < nelts ; n++) {
+            *sptr++ = ',';
+            *sptr++ = '?';
+        }
+        *sptr++ = ')';
+        *sptr++ = 0;
+    }
+    else
+        sql = (char *) file->stmt_sql;
+    start = end = sql;
     inliteral = 0;
     while (nelts && (end = strpbrk(end, "?%'"))) { 
         /* It can't be a param inside a string literal 
@@ -290,19 +310,19 @@ static apr_status_t write_log(request_rec *r,
             handle->name);
         return write_fallback_log(r, handle, file, newstrs, newnelts);
     }
-    /* get our prepared statement */
-    if ((stmt = apr_hash_get(dbd->prepared, file->stmt_label, 
+    /* file->stmt_sql might just be a label created with DBDPrepareSQL, not real SQL */
+    if (isSimpleName(file->stmt_sql) 
+        && (prestmt = apr_hash_get(dbd->prepared, file->stmt_sql, APR_HASH_KEY_STRING))) {
+            stmt = prestmt;
+    }
+    /* otherwise, get our real prepared statement */
+    else if ((stmt = apr_hash_get(dbd->prepared, file->stmt_label, 
                              APR_HASH_KEY_STRING)) == NULL) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
             "mod_log_dbd: Unable to retrieve prepared statement %s, logging SQL to %s", 
             file->stmt_label, handle->name);
         return write_fallback_log(r, handle, file, newstrs, newnelts);
     }
-
-    /* file->sql might just be a label created with DBDPrepareSQL, not real SQL */
-    if (isSimpleName(file->stmt_sql) 
-        && (prestmt = apr_hash_get(dbd->prepared, file->stmt_sql, APR_HASH_KEY_STRING)))
-            stmt = prestmt;
 
     /* perform the query */
     if (rv = apr_dbd_pquery(dbd->driver, r->pool, dbd->handle, &rows, stmt, 
