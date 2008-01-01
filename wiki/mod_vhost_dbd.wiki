@@ -48,6 +48,8 @@ DBDPrepareSQL "SELECT WebDir FROM WebTable WHERE WebName = ?"  HostLookup
 DBDocRoot HostLookup  HOSTNAME
 }}}
 
+ * Some databases (for example: Firebird) may report errors when statements for *DBDocRoot* are prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]. In this case, [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] cannot be used for virtual host statements.
+
   * For Apache 2.2 use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
 
   * For Apache 2.3+ always use *%s* as a parameter marker in your SQL statement.
