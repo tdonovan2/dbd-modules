@@ -18,7 +18,7 @@ Only [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" direc
 
 The *QUERY* parameters must correspond to the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
 
-Access log records are inserted into the database.  Access log records are only written to the file `logs/acess.sql` (as SQL statements) if the database is inaccessible.
+Access log records are inserted into the database.  Access log records are only written to the file `logs/acess.sql` _(as SQL statements)_ if the database is inaccessible.
 
 DBDLog can be used at the Server or the Virtual Host level.
 
