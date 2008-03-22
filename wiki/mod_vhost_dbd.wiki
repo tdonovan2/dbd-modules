@@ -19,7 +19,7 @@ DBDocRoot can be used at the Server or the Virtual Host level.
 *QUERY* is an SQL statement which returns one row with the document root directory name in the first column.
 
 *PARAM ...* arguments are inserted into the SQL statement at request time.  Use one *PARAM* for each parameter marker in your SQL statement.  In the examples, *?* is the parameter marker.  *PARAM* may be any of these words (space separated, not case sensitive):
-|| *HOSTNAME*||requested hostname|| _may be NULL if there is no Host header. e.g. HTTP 1.0 requests_ ||
+|| *HOSTNAME*||requested hostname|| _may be NULL if there is no Host header. e.g. HTTP 1.0 or FTP requests_ ||
 || *IP*||host IP address|| _as a string, never NULL_ ||
 || *PORT*||host port number|| _as string, never NULL_ ||
 || *URI*||The request URI|| _never NULL_ ||
