@@ -341,7 +341,7 @@ static int setDocRoot(request_rec *r)
         for (hidx = apr_hash_first(r->pool, conn_conf->envs) ; hidx ; hidx = apr_hash_next(hidx)) {
             const char *name ;
             const char *val;
-            apr_hash_this(hidx, &(void *)name, NULL, &(void *)val);
+            apr_hash_this(hidx, (void *)&name, NULL, (void *)&val);
             if (val && *val)
                 apr_table_set(r->subprocess_env, name, val);
             else
