@@ -1,6 +1,6 @@
-/*  MOD_VHOST_DBD     Apache 2.3+ module
+/*  MOD_VHOST_DBD     Apache 2.2 module
 
-Copyright 2007  Tom Donovan
+Copyright 2008  Tom Donovan
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,20 +32,6 @@ module AP_MODULE_DECLARE_DATA vhost_dbd_module;
 /* Maximum number of parameters which can be passed to the query */
 #define MAX_PARAMS  100
 
-/* This string is used in the conn notes to indicate that no docroot was 
- * returned. This string must be a value which will never be returned as 
- * the docroot by the query. Hyphen and tab \t are included because they are 
- * unlikely in directory names. Alas, nothing (except NULL and /) is really 
- * prohibited in unix filenames.
- */
-#define NO_DOCROOT "-\t.\t"
-
-/* The key for the saved docroot must use a delimiter char which cannot be in 
- * hostname, ftpuser, or uri.  ap_escape_logitem and ap_escape_uri ensure that
- * this will never happen.
- */
-#define KEY_DELIMITER "\t"
-
 /* vhost_dbd_module server configuration */
 typedef struct {    
     const char *label;                /* DBD prepared statement label */
@@ -54,6 +40,15 @@ typedef struct {
     int params[MAX_PARAMS];     /* array of param codes */
     int urisegs[MAX_PARAMS];    /* number of URI segments to use (0=all) */
 } vhost_dbd_conf;
+
+/* vhost_dbd_module connection configuration */
+typedef struct {
+    const char *hostname;
+    const char *FTPUser;
+    const char *uri;
+    const char *root;
+    apr_hash_t *envs;
+} vhost_dbd_conn_conf;
 
 /* parameter codes */
 enum {hostname, ip, port, uri, ftpuser} paramNames; 
@@ -64,6 +59,9 @@ static APR_OPTIONAL_FN_TYPE(ap_dbd_acquire) *dbd_acquire_fn = NULL;
 
 /* check if a string could be a label name */
 #define MAX_LABEL_SIZE 32
+/* longest env var name */
+#define MAX_ENV_NAME 32
+
 static APR_INLINE int isSimpleName(const char *s) 
 {   
     if (strlen(s) > MAX_LABEL_SIZE)
@@ -74,6 +72,7 @@ static APR_INLINE int isSimpleName(const char *s)
     return 1;
 }
 
+/* set the document root for this request - called by a translate_name hook */
 static int setDocRoot(request_rec *r)
 {
     request_rec *mainreq = r;
@@ -87,18 +86,19 @@ static int setDocRoot(request_rec *r)
     int rv = 0;
     int i, j;
     const char **params;
-    const char *newroot;
-    const char *keyUri = NULL;
     const char *trimmedUri;
     const char *keyHostname = NULL;
     const char *keyFTPuser = NULL;
-    const char *key;
+    const char *keyUri = NULL;
+    const char *newroot = NULL;
     const char *start;
     int maxseg = 0;
     vhost_dbd_conf *conf = 
         (vhost_dbd_conf *) ap_get_module_config(r->server->module_config, 
                                                 &vhost_dbd_module);
-
+    vhost_dbd_conn_conf *conn_conf = 
+        (vhost_dbd_conn_conf*) ap_get_module_config( r->connection->conn_config, 
+                                                     &vhost_dbd_module);
     if (conf->label == NULL)
         return DECLINED;
     if (r->proxyreq)
@@ -116,7 +116,7 @@ static int setDocRoot(request_rec *r)
 
     /* Collect the parameters.  Make sure hostname and uri cannot surprise the
      * database server with unexpected characaters (e.g. control characters) 
-     * We (ab)use ap_escape_logitem to prevent this kind of trouble.
+     * We (ab)use the ap_escape_logitem function to prevent this kind of trouble.
      */
     for (i = 0 ; i < conf->nparams ; i++) {
         switch( conf->params[i] ) {
@@ -155,19 +155,27 @@ static int setDocRoot(request_rec *r)
                 }
         }
     }
-    /* Can we just use a saved result for this connection? 
-     * Only a change in the hostname or the part of the URI we are using requires
-     * a new query for this connection.  Use empty string instead of NULL in 
-     * key if no hostname. Tabs are illegal in hostname or uri, so use \t as the 
-     * delimiter.
-     */
-    key = apr_pstrcat(r->pool, "DBD:vhostKey=", 
-                              keyHostname ? keyHostname : "",
-                        "\t", keyFTPuser ? keyFTPuser : "",
-                        "\t", keyUri, NULL);
-    if ( !(newroot = apr_table_get(r->connection->notes, key))) {
 
-        /* we need to execute a query */
+    /* Create a new connection config if we don't already have one */
+    if (!conn_conf) {
+        conn_conf = apr_pcalloc(r->connection->pool, sizeof(vhost_dbd_conn_conf));
+        conn_conf->envs = apr_hash_make(r->connection->pool);
+        ap_set_module_config(r->connection->conn_config, &vhost_dbd_module, conn_conf);
+    }
+
+    /* Can we re-use a previous result from our conn_conf? 
+     * Only a change in the hostname, FTP user name, or the part of the URI that we 
+     * are actually using requires a new query for this connection.
+     *
+     * Note that if a conn_conf->root exists we are within the same connection,
+     * so this request is guaranteed to be to the same IP address. 
+     */
+    if (!conn_conf->root
+        || (keyHostname && (!conn_conf->hostname || strcmp(conn_conf->hostname, keyHostname)))
+        || (keyFTPuser &&  (!conn_conf->FTPUser  || strcmp(conn_conf->FTPUser, keyFTPuser)))
+        || (keyUri &&      (!conn_conf->uri      || strcmp(conn_conf->uri, keyUri)))
+        ) {
+        /* YES - we do need to execute a query */
         if ((dbd = dbd_acquire_fn(r)) == NULL) {
             ap_log_rerror(APLOG_MARK, APLOG_CRIT, 0, r,
                 "mod_vhost_dbd: Error acquiring connection to database");
@@ -200,16 +208,14 @@ static int setDocRoot(request_rec *r)
             ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r,
                 "mod_vhost_dbd: Returned multiple (%d) rows (stmt: %s)", 
                 rows, conf->label );
-            /* Flush the extra rows */
+            /* Flush the multiple rows and return an error */
             while (!apr_dbd_get_row(dbd->driver, r->pool, res, &row, -1))
                 continue;
             return HTTP_INTERNAL_SERVER_ERROR;
         }
 
         if (!rows) {
-            /* use an illegal-hostname string as key to save empty response */
-            apr_table_set(r->connection->notes, key, NO_DOCROOT);
-
+            /* a vhost was not found by the SQL query */
             /* DEBUG loglevel */
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
                 "mod_vhost_dbd: Executed: (stmt: %s) returned %d rows, DocRoot unset",
@@ -244,22 +250,23 @@ static int setDocRoot(request_rec *r)
             return HTTP_FORBIDDEN;
         }
 #if APU_MAJOR_VERSION > 1 || (APU_MAJOR_VERSION == 1 && APU_MINOR_VERSION >= 3)
-        /* set any extra columns as env variables - unset if NULL or zero-length value */
+        /* save any extra columns to become env variables */
+        apr_hash_clear(conn_conf->envs);
         for (j = 1; j < cols ; j++) {
             int k;
-
             const char *name = apr_dbd_get_name(dbd->driver, res, j);
             const char *val = apr_dbd_get_entry(dbd->driver, row, j);
+
             if (name && *name) {
-                char *str = apr_pstrdup(r->pool, name);
+                char str[MAX_ENV_NAME];
+                apr_cpystrn(str, name, MAX_ENV_NAME);
+                /* no bogus chars allowed in env var names - substitute underscores */
                 for (k=0 ; str[k]; k++)
                     if (!apr_isalnum(str[k])) 
                         str[k] = '_'; 
-
-                if (val && *val)
-                    apr_table_set(r->subprocess_env, str, val);
-                else
-                    apr_table_unset(r->subprocess_env, str);
+                apr_hash_set(conn_conf->envs, 
+                             apr_pstrdup(r->connection->pool, str), APR_HASH_KEY_STRING, 
+                             apr_pstrdup(r->connection->pool, val));
             }
         }
 #endif
@@ -267,9 +274,9 @@ static int setDocRoot(request_rec *r)
         if (r->server->loglevel == APLOG_DEBUG) {
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
                 "mod_vhost_dbd: Successfully executed query: (stmt: %s) "
-                "returned %d row(s) %d column(s), key: [%s], "
+                "returned %d row(s) %d column(s), key: [%s:%s:%s], "
                 "setting DocRoot to: %s",
-                conf->label, rows, cols, key, newroot);
+                conf->label, rows, cols, keyHostname, keyFTPuser, keyUri , newroot);
 
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
                 "mod_vhost_dbd: Hostname: %s, IP: %s, Port: %s, URI: %s ",
@@ -279,29 +286,36 @@ static int setDocRoot(request_rec *r)
                 ap_escape_uri(r->pool, r->uri)
                 );
         }
+        conn_conf->hostname = keyHostname ? apr_pstrdup(r->connection->pool, keyHostname) : NULL;
+        conn_conf->FTPUser = keyFTPuser ? apr_pstrdup(r->connection->pool, keyFTPuser) : NULL;
+        conn_conf->uri = keyUri ? apr_pstrdup(r->connection->pool, keyUri) : NULL;
+        conn_conf->root = newroot ? apr_pstrdup(r->connection->pool, newroot) : NULL;
+
         /* fetch until -1 return to make sure results set gets cleaned up */
         while (!apr_dbd_get_row(dbd->driver, r->pool, res, &row, -1))
             continue;
     }
-    else if (r->server->loglevel == APLOG_DEBUG) {
-        /* we do not need to execute a query - use the newroot from connection->notes */
+    else  {
+        /* NO - we do not need to execute a query. Use the root we saved in conn_conf */
+        newroot = conn_conf->root;
+        if (r->server->loglevel == APLOG_DEBUG) {
+            /* DEBUG loglevel */
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+                "mod_vhost_dbd: Using previous connection query (stmt: %s) "
+                "key: [%s:%s:%s], setting DocRoot to: %s",
+                conf->label, keyHostname, keyFTPuser, keyUri, newroot);
 
-        /* DEBUG loglevel */
-        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
-            "mod_vhost_dbd: Using previous connection query (stmt: %s) "
-            "key: [%s], setting DocRoot to: %s",
-            conf->label, key, newroot);
-
-        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
-                "mod_vhost_dbd: Hostname: %s, IP: %s, Port: %s, URI: %s ",
-                ap_escape_logitem(r->pool, r->hostname),
-                mainreq->connection->local_ip,
-                apr_itoa(r->pool, mainreq->connection->local_addr->port),
-                ap_escape_uri(r->pool, r->uri)
-                );
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+                    "mod_vhost_dbd: Hostname: %s, IP: %s, Port: %s, URI: %s ",
+                    ap_escape_logitem(r->pool, r->hostname),
+                    mainreq->connection->local_ip,
+                    apr_itoa(r->pool, mainreq->connection->local_addr->port),
+                    ap_escape_uri(r->pool, r->uri)
+                    );
+        }
     }
 
-    if (!strcmp(newroot, NO_DOCROOT))
+    if (!newroot)
         return DECLINED;
 
     trimmedUri = r->uri;
@@ -318,8 +332,22 @@ static int setDocRoot(request_rec *r)
     }
     else {
         /* got a good doc root - set it and save the result for this conn */
+        apr_hash_index_t *hidx;
+
         r->canonical_filename = r->filename;
-        apr_table_set(r->connection->notes, key, newroot);
+        conn_conf->root = apr_pstrdup(r->connection->pool, newroot);
+#if APU_MAJOR_VERSION > 1 || (APU_MAJOR_VERSION == 1 && APU_MINOR_VERSION >= 3)
+        /* set env variables - unset them if NULL or zero-length value */
+        for (hidx = apr_hash_first(r->pool, conn_conf->envs) ; hidx ; hidx = apr_hash_next(hidx)) {
+            const char *name ;
+            const char *val;
+            apr_hash_this(hidx, &(void *)name, NULL, &(void *)val);
+            if (val && *val)
+                apr_table_set(r->subprocess_env, name, val);
+            else
+                apr_table_unset(r->subprocess_env, name);
+        }
+#endif
     }
 
     return (!rv) ? OK : HTTP_BAD_REQUEST;
