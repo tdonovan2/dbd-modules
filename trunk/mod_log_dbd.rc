@@ -24,6 +24,7 @@ BEGIN
           VALUE "FileDescription",  "Apache DBD logging module"
           VALUE "FileVersion",      "1.0.3.0"
           VALUE "LegalCopyright",   "Copyright 2008, Tom Donovan"
+          VALUE "CompanyName",      "Apache Lounge"
           VALUE "ProductName",      "mod_log_dbd"
           VALUE "ProductVersion",   "1.0.3"
       END
