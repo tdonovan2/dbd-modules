@@ -25,7 +25,7 @@ DBDLog can be used at the Server or the Virtual Host level.
 = Details =
 *FILENAME* must match the filename used in the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive.
 
-*SQL* is an SQL statement whose parameter markers match the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
+*SQL* is an SQL statement whose parameter markers correspond exactly to the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
 
 *USENULLS* causes any parameters which are a single hyphen to be inserted into the database as NULL values. Make sure both your DBD driver and your database can handle NULL values. The [http://odbc-dbd.googlecode.com/ odbc-dbd driver] v1.0.6 or higher and the PostgreSQL DBD driver can process NULL values.
 
