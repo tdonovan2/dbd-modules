@@ -29,17 +29,11 @@ DBDLog can be used at the Server or the Virtual Host level.
 
 *USENULLS* causes any parameters which are a single hyphen to be inserted into the database as NULL values. Make sure both your DBD driver and your database can handle NULL values. The [http://odbc-dbd.googlecode.com/ odbc-dbd driver] v1.0.6 or higher and the PostgreSQL DBD driver can process NULL values.
 
-  * Apache requests will be logged to the database using the SQL statement. 
+  * Apache requests will be logged to the database using the SQL statement. If the database cannot be accessed, the SQL statement (with the data inserted) is written to the file, and the error is written to the error log.
 
-If the database cannot be accessed, the SQL statement (with the data inserted) is written to the file, and the error is written to the error log.
-
-  * Do not put any characters between the format codes in the log format except a comma and (optionally) spaces. 
-
-Characters inside the curly braces of `%{...}` are OK, so the date  `%{Year:%Y Month:%m Day:%d}t` is acceptable.
+  * Do not put any characters between the format codes in the log format except a comma and (optionally) spaces. Characters inside the curly braces of `%{...}` are OK, so the date  `%{Year:%Y Month:%m Day:%d}t` is acceptable.
   
-  * If you have literal strings in your SQL statement, always enclose them in single-quotes; even if your database allows other forms, like enclosing literals in double-quotes. 
-
-Your server may be vulnerable to SQL-injection attacks if you do not use single-quotes for string literals.
+  * If you have literal strings in your SQL statement, always enclose them in single-quotes; even if your database allows other forms, like enclosing literals in double-quotes. Your server may be vulnerable to SQL-injection attacks if you do not use single-quotes for string literals.
   
   * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] (e.g.  the [http://odbc-dbd.googlecode.com/ odbc-dbd driver]) and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_log_dbd.
   
