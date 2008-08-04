@@ -4,24 +4,24 @@
 = Introduction =
 mod_vhost_dbd has one directive:
 
-==== DBDocRoot    QUERY    [ PARAM ... ] ====
+==== DBDocRoot    SQL    [ PARAM ... ] ====
 
-mod_vhost_dbd sets the document root directory for a request to a value returned by a SQL query.
+mod_vhost_dbd sets the document root directory for a request to a value returned by an SQL query.
 
-The query must return the document root directory name as the first column.
+The query returns the document root directory name as the first column.
 {{{
-DBDocRoot "SELECT WebDir FROM WebTable WHERE WebName = ?"  HOSTNAME
+DBDocRoot "SELECT WebDir FROM WebTable WHERE WebName = %s"  HOSTNAME
 }}}
 DBDocRoot can be used at the Server or the Virtual Host level.
 
 
 = Details =
-*QUERY* is an SQL statement which returns one row with the document root directory name in the first column.
+*SQL* is an SQL statement which returns no more than one row, with the document root directory as the first column.
 
-*PARAM ...* arguments are inserted into the SQL statement at request time.  Use one *PARAM* for each parameter marker in your SQL statement.  In the examples, *?* is the parameter marker.  *PARAM* may be any of these words (space separated, not case sensitive):
+*PARAM ...* arguments are inserted into the SQL statement at request time.  Use one *PARAM* for each parameter marker in your SQL statement.  In the examples, *%s* is the parameter marker.  *PARAM* may be any of these words (space separated, not case sensitive):
 || *HOSTNAME*||requested hostname|| _may be NULL if there is no Host header. e.g. HTTP 1.0 or FTP requests_ ||
-|| *IP*||host IP address|| _as a string, never NULL_ ||
-|| *PORT*||host port number|| _as string, never NULL_ ||
+|| *IP*||server IP address|| _as a string, never NULL_ ||
+|| *PORT*||server port number|| _as string, never NULL_ ||
 || *URI*||The request URI|| _never NULL_ ||
 || *URI`n`* _where_ *`n`* _is 1-9_ ||Pass only the first `n` segments of the URI to the query|| _never NULL_ ||
 
@@ -38,25 +38,25 @@ LoadModule vhost_dbd_module modules/mod_vhost_dbd.so
 
   * *PARAM* names can be repeated as necessary. For example: to only look up hosts containing ".acme." for port 80 requests:
 {{{
-        DBDocRoot "SELECT DocRoot FROM myTable WHERE ? LIKE '%.acme.%' AND Host = ? AND ? = 80" HOSTNAME HOSTNAME PORT
+        DBDocRoot "SELECT DocRoot FROM myTable WHERE %s LIKE '%%.acme.%%' AND Host = %s AND %s = 80" HOSTNAME HOSTNAME PORT
 }}}
 
-  * *DBDocRoot* can use the name of a statement previously defined with the [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] directive as the *QUERY*. For example:
+  * *DBDocRoot* can use the name of a statement previously defined with the [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] directive as the *SQL* parameter. For example:
 {{{
-DBDPrepareSQL "SELECT WebDir FROM WebTable WHERE WebName = ?"  HostLookup
+DBDPrepareSQL "SELECT WebDir FROM WebTable WHERE WebName = %s"  HostLookup
 ...
 DBDocRoot HostLookup  HOSTNAME
 }}}
 
  * Some databases (for example: Firebird) may report errors when statements for *DBDocRoot* are prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]. In this case, [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] cannot be used for virtual host statements.
 
-  * For Apache 2.2 use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
+  * For Apache 2.2 prior to version 2.2.9, use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
 
-  * For Apache 2.3+ always use *%s* as a parameter marker in your SQL statement.
+  * For Apache 2.2.9+ always use *%s* as a parameter marker in your SQL statement.  If your SQL statement contains other *%* characters (for example, in a LIKE clause), use *%%* to prevent them from being misinterpreted as parameter markers.
 
-  * For Apache 2.3+, any additional columns which are returned will set an [http://httpd.apache.org/docs/2.3/env.html environment variable] with the same name as the column name. If the column value is NULL, any existing [http://httpd.apache.org/docs/2.3/env.html environment variable] which matches the column name will be unset.
+  * For Apache 2.2.9+, any additional columns which are returned will set an [http://httpd.apache.org/docs/2.3/env.html environment variable] with the same name as the column name. If the column value is NULL, any existing [http://httpd.apache.org/docs/2.3/env.html environment variable] which matches the column name will be unset.
 
-  * Using a URI *PARAM* increases the number of database queries required because each request requires a new query. Using only the leading portion of the URI can reduce the number of queries. When multiple requests are made on the same keep-alive connection which have the same URI`n` value, only one query is needed.
+  * Using a URI *PARAM* increases the number of database queries required because each request requires a new query. Using only the leading portion of the URI can reduce the number of database queries required. When multiple requests are made on the same keep-alive connection which have the same URI`n` value, only one query is needed.
 
   * If the URI is /alpha/beta/gamma/delta/index.html:
 {{{
@@ -70,6 +70,7 @@ DBDocRoot HostLookup  HOSTNAME
    URI9 is /alpha/beta/gamma/delta/index.html
    URI  is /alpha/beta/gamma/delta/index.html
 }}}
+
 
   * If [http://httpd.apache.org/modules/ mod_ftp] is used, an additional *PARAM* name is available.  *FTPUSER* can be specified to pass the logged-in FTP user name.  This parameter is not available for HTTP requests.
 
