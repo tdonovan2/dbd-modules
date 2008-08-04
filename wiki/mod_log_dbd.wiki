@@ -4,19 +4,19 @@
 = Introduction =
 *mod_log_dbd* has one directive:
 
-=== DBDLog   FILENAME   QUERY    [ USENULLS ] ===
+=== DBDLog   FILENAME   SQL    [ USENULLS ] ===
 
 *DBDLog* is always paired with a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive using the same file name.
 
 The *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* format must be a comma-separated list of [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html mod_log_config]  [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives]. 
 {{{
 CustomLog   logs/access.sql     "%h, %l, %u, %{%Y-%m-%d %H:%M:%S}t, %r, %>s, %b"
-DBDLog      logs/access.sql    "INSERT INTO log_table (Host, Rname, User, Tstmp, Request, Status, Bytes) VALUES (?, ?, ?, ?, ?, ?, ?)"
+DBDLog      logs/access.sql    "INSERT INTO log_table (Host, Rname, User, Tstmp, Request, Status, Bytes) VALUES (%s, %s, %s, %s, %s, %s, %s)"
 }}}
 
 Only [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives], commas, and spaces can appear in the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* format.
 
-The *QUERY* parameters must correspond to the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
+The *SQL* parameter markers must correspond to the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
 
 Access log records are inserted into the database.  Access log records are only written to the file `logs/access.sql` _(as SQL statements)_ if the database is inaccessible.
 
@@ -25,7 +25,7 @@ DBDLog can be used at the Server or the Virtual Host level.
 = Details =
 *FILENAME* must match the filename used in the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive.
 
-*QUERY* is an SQL statement whose parameters match the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
+*SQL* is an SQL statement whose parameter markers match the *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#formats "%" directives].
 
 *USENULLS* causes any parameters which are a single hyphen to be inserted into the database as NULL values. Make sure both your DBD driver and your database can handle NULL values. The [http://odbc-dbd.googlecode.com/ odbc-dbd driver] v1.0.6 or higher and the PostgreSQL DBD driver can process NULL values.
 
@@ -50,17 +50,19 @@ Your server may be vulnerable to SQL-injection attacks if you do not use single-
 LoadModule log_dbd_module modules/mod_log_dbd.so 
 }}}
 
-  * *QUERY* should return no rows.  It is typically an SQL INSERT, UPDATE, or stored procedure call DML statement.
+  * *SQL* should return no rows.  It is typically an SQL INSERT, UPDATE, or stored procedure call DML statement.
 
   * Do not put a semicolon at the end of your SQL statement.
 
   * Do not use DBDLog with a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#cookielog CookieLog]* directive. Use a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive with a `%{Cookie}n` format instead.
 
 
-  * *DBDLog* can use the name of a statement previously defined with the *[http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]* directive as the *QUERY*. For example:
+  * *DBDLog* can use the name of a statement previously defined with the *[http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]* directive as the *SQL* parameter. For example:
 {{{
+
+
 LogFormat      "%V, %r"  dbFormat
-DBDPrepareSQL  "INSERT INTO log_table (Server, Url) VALUES (?, ?)"  dbLog
+DBDPrepareSQL  "INSERT INTO log_table (Server, Url) VALUES (%s, %s)"  dbLog
 ...
 CustomLog logs/access.sql  dbFormat
 DBDLog    logs/access.sql  dbLog  UseNULLs
@@ -68,9 +70,9 @@ DBDLog    logs/access.sql  dbLog  UseNULLs
 
   * Unfortunately, using a statement prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] precludes using *FILENAME* directly for database recovery because the original SQL statement text is no longer available to *DBDLog* when writing to *FILENAME*.  The prepared statement label is used as if it were a SQL function when writing to *FILENAME*.  You will need to edit *FILENAME* before it can be used for database recovery. Some databases (for example: [http://firebirdsql.org Firebird]) may report errors when statements for *DBDLog* are prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]. In this case, [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] cannot be used for log statements.
 
-  * For Apache 2.2 use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
+  * For Apache 2.2 prior to version 2.2.9, use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
 
-  * For Apache 2.3+ always use *%s* as a parameter marker in your SQL statement.
+  * For Apache 2.2.9+ always use *%s* as a parameter marker in your SQL statement.
 
   * If you do not want log entries to be saved to a file when the database is inaccessable, set *FILENAME* to *NUL* _(on Windows)_ or to */dev/null* _(on Unix)_.
 
@@ -85,7 +87,7 @@ If you _must_ try to use such a database, set [http://httpd.apache.org/docs/2.3/
 
 [http://www.oracle.com/database/index.html Oracle], [http://www.mysql.com/ MySQL] _(especially with a MyISAM table)_, [http://www.postgresql.org PostgreSQL], [http://db.apache.org/derby/ Apache Derby] _(as a Network Server)_, [http://www.microsoft.com/sql SQL Server], [http://www.sybase.com/products/databasemanagement Sybase], [http://firebirdsql.org Firebird], etc. all work well for logging. 
 
-[http://office.microsoft.com/en-us/access Microsoft Access] works surprisingly well for modest-volume Apache servers on Windows.
+[http://office.microsoft.com/en-us/access Microsoft Access] works surprisingly well for modest-volume Apache servers on Windows using the ODBC driver.
 
 == Indexes ==
 
