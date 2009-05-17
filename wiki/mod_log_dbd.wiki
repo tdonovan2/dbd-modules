@@ -35,7 +35,7 @@ DBDLog can be used at the Server or the Virtual Host level.
   
   * If you have literal strings in your SQL statement, always enclose them in single-quotes; even if your database allows other forms, like enclosing literals in double-quotes. Your server may be vulnerable to SQL-injection attacks if you do not use single-quotes for string literals.
   
-  * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] (e.g.  the [http://odbc-dbd.googlecode.com/ odbc-dbd driver]) and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_log_dbd.
+  * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_log_dbd.
   
   * You must have [http://httpd.apache.org/docs/2.3/mod/mod_log_config.html mod_log_config] loaded and configured to use mod_log_dbd.
 
