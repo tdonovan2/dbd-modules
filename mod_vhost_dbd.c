@@ -76,8 +76,8 @@ static APR_INLINE int isSimpleName(const char *s)
 static int setDocRoot(request_rec *r)
 {
     request_rec *mainreq = r;
-    apr_dbd_results_t *res;
-    apr_dbd_row_t *row;
+    apr_dbd_results_t *res = NULL;
+    apr_dbd_row_t *row = NULL;
     ap_dbd_t *dbd;
     apr_dbd_prepared_t *stmt;
     apr_dbd_prepared_t *prestmt;
