@@ -4,7 +4,7 @@
 = Introduction =
 mod_vhost_dbd has one directive:
 
-==== DBDocRoot    SQL    [ PARAM ... ] ====
+==== DBDocRoot    SQL    `[` PARAM ... `]` ====
 
 mod_vhost_dbd overrides the document root directory for a request to a value returned by an SQL query.
 
