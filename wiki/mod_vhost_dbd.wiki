@@ -8,7 +8,7 @@ mod_vhost_dbd has one directive:
 
 mod_vhost_dbd overrides the document root directory for a request to a value returned by an SQL query.
 
-The query returns the override document root directory name as the first column.
+The query returns the override directory name as the first column.
 {{{
 DBDocRoot "SELECT WebDir FROM WebTable WHERE WebName = %s"  HOSTNAME
 }}}
@@ -16,7 +16,7 @@ DBDocRoot can be used at the Server or the Virtual Host level.
 
 
 = Details =
-*SQL* is an SQL statement which returns no more than one row, with the document root directory as the first column.
+*SQL* is an SQL statement which returns no more than one row, with the override directory as the first column.  This directory is used instead of the existing document root set by the [http://httpd.apache.org/docs/current/mod/core.html#documentroot DocumentRoot] directive.
 
 *PARAM ...* arguments are inserted into the SQL statement at request time.  Use one *PARAM* for each parameter marker in your SQL statement.  In the examples, *%s* is the parameter marker.  *PARAM* may be any of these words (space separated, not case sensitive):
 || *HOSTNAME*||requested hostname|| _may be NULL if there is no Host header. e.g. HTTP 1.0 or FTP requests_ ||
@@ -25,9 +25,9 @@ DBDocRoot can be used at the Server or the Virtual Host level.
 || *URI*||The request URI|| _never NULL_ ||
 || *URI`n`* _where_ *`n`* _is 1-9_ ||Pass only the first `n` segments of the URI to the query|| _never NULL_ ||
 
-  * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] and [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_vhost_dbd.
+  * You must have an Apache [http://people.apache.org/~niq/dbd.html DBD driver] and [http://httpd.apache.org/docs/current/mod/mod_dbd.html mod_dbd] loaded and configured to use mod_vhost_dbd.
 
-  * Use [http://httpd.apache.org/docs/2.3/mod/mod_so.html#loadmodule LoadModule] to enable mod_vhost_dbd.
+  * Use [http://httpd.apache.org/docs/current/mod/mod_so.html#loadmodule LoadModule] to enable mod_vhost_dbd.
 {{{
 LoadModule vhost_dbd_module modules/mod_vhost_dbd.so 
 }}}
@@ -41,20 +41,20 @@ LoadModule vhost_dbd_module modules/mod_vhost_dbd.so
         DBDocRoot "SELECT DocRoot FROM myTable WHERE %s LIKE '%%.acme.%%' AND Host = %s AND %s = 80" HOSTNAME HOSTNAME PORT
 }}}
 
-  * *DBDocRoot* can use the name of a statement previously defined with the [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] directive as the *SQL* parameter. For example:
+  * *DBDocRoot* can use the name of a statement previously defined with the [http://httpd.apache.org/docs/current/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] directive as the *SQL* parameter. For example:
 {{{
 DBDPrepareSQL "SELECT WebDir FROM WebTable WHERE WebName = %s"  HostLookup
 ...
 DBDocRoot HostLookup  HOSTNAME
 }}}
 
- * Some databases (for example: Firebird) may report errors when statements for *DBDocRoot* are prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]. In this case, [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] cannot be used for virtual host statements.
+ * Some databases (for example: Firebird) may report errors when statements for *DBDocRoot* are prepared with [http://httpd.apache.org/docs/2.3/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL]. In this case, [http://httpd.apache.org/docs/current/mod/mod_dbd.html#dbdpreparesql DBDPrepareSQL] cannot be used for virtual host statements.
 
   * For Apache 2.2 prior to version 2.2.9, use parameter markers appropriate to your database.  For example: Use *?* for [http://odbc-dbd.googlecode.com/ ODBC] or SQLite.  Use *%s* for MySQL, etc.
 
   * For Apache 2.2.9+ always use *%s* as a parameter marker in your SQL statement.  If your SQL statement contains other *%* characters (for example, in a LIKE clause), use *%%* to prevent them from being misinterpreted as parameter markers.
 
-  * For Apache 2.2.9+, any additional columns which are returned will set an [http://httpd.apache.org/docs/2.3/env.html environment variable] with the same name as the column name. If the column value is NULL, any existing [http://httpd.apache.org/docs/2.3/env.html environment variable] which matches the column name will be unset.
+  * For Apache 2.2.9+, any additional columns which are returned will set an [http://httpd.apache.org/docs/current/env.html environment variable] with the same name as the column name. If the column value is NULL, any existing [http://httpd.apache.org/docs/2.3/env.html environment variable] which matches the column name will be unset.
 
   * Using a URI *PARAM* increases the number of database queries required because each request requires a new query. Using only the leading portion of the URI can reduce the number of database queries required. When multiple requests are made on the same keep-alive connection which have the same URI`n` value, only one query is performed.
 
@@ -72,9 +72,9 @@ DBDocRoot HostLookup  HOSTNAME
 }}}
 
 
-  * If [http://httpd.apache.org/modules/ mod_ftp] is used, an additional *PARAM* name is available.  *FTPUSER* can be specified to pass the logged-in FTP user name.  This parameter is not available for HTTP requests.
+  * If [http://httpd.apache.org/modules/mod_ftp] is used, an additional *PARAM* name is available.  *FTPUSER* can be specified to pass the logged-in FTP user name.  This parameter is not available for HTTP requests.
 
-  * Setting *[http://httpd.apache.org/docs/2.3/mod/core.html#loglevel LogLevel] debug* will print additional information in the Apache error log which can help to diagnose SQL query problems.
+  * Setting *[http://httpd.apache.org/docs/current/mod/core.html#loglevel LogLevel] debug* will print additional information in the Apache error log which can help to diagnose SQL query problems.
 
   * The httpd server variable: *document_root* is not changed by mod_vhost_dbd.  It remains as the value set by the *[http://httpd.apache.org/docs/current/mod/core.html#documentroot DocumentRoot ]* directive in the httpd configuration file.  For example, these variables will contain the path set in the httpd configuration file - not the path set by *DBDocRoot*:
 ||PHP || {{{$_SERVER['DOCUMENT_ROOT']}}} ||
