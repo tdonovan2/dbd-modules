@@ -6,9 +6,9 @@ mod_vhost_dbd has one directive:
 
 ==== DBDocRoot    SQL    [ PARAM ... ] ====
 
-mod_vhost_dbd sets the document root directory for a request to a value returned by an SQL query.
+mod_vhost_dbd overrides the document root directory for a request to a value returned by an SQL query.
 
-The query returns the document root directory name as the first column.
+The query returns the override document root directory name as the first column.
 {{{
 DBDocRoot "SELECT WebDir FROM WebTable WHERE WebName = %s"  HOSTNAME
 }}}
