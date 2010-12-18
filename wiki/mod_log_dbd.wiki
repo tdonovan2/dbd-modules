@@ -18,7 +18,7 @@ Only [http://httpd.apache.org/docs/current/mod/mod_log_config.html#formats "%" d
 
 The *SQL* parameter markers must correspond to the *[http://httpd.apache.org/docs/current/mod/mod_log_config.html#customlog CustomLog]* [http://httpd.apache.org/docs/current/mod/mod_log_config.html#formats "%" directives].
 
-Notice how in the example above: there are seven comma-separated fields in the *[http://httpd.apache.org/docs/current/mod/mod_log_config.html#customlog CustomLog]* directive ( {{{%{%Y-%m-%d %H:%M:%S}t}}} is a single field) which match the seven comma-separated {{{%s}}} parameter markers in the *DBDLog* directive.
+Notice how in the example above: there are seven comma-separated fields in the *[http://httpd.apache.org/docs/current/mod/mod_log_config.html#customlog CustomLog]* directive ( {{{%{%Y-%m-%d %H:%M:%S}t}}} _is a single field_) which match the seven comma-separated {{{%s}}} parameter markers in the *DBDLog* directive.
 
 Access log records are inserted into the database.  Access log records are only written to the file `logs/access.sql` _(as SQL statements)_ if the database is inaccessible.
 
