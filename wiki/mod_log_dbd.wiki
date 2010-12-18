@@ -4,7 +4,7 @@
 = Introduction =
 *mod_log_dbd* has one directive:
 
-=== DBDLog   FILENAME   SQL    `[` USENULLS `]` ===
+=== DBDLog   FILENAME   SQL    `[`USENULLS`]` ===
 
 *DBDLog* is always paired with a *[http://httpd.apache.org/docs/2.3/mod/mod_log_config.html#customlog CustomLog]* directive using the same file name.
 
