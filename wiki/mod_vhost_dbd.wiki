@@ -8,7 +8,7 @@ mod_vhost_dbd has one directive:
 
 mod_vhost_dbd overrides the document root directory for a request to a value returned by an SQL query.
 
-The query returns the override directory name as the first column.
+The query returns the directory name as the first column.
 {{{
 DBDocRoot "SELECT WebDir FROM WebTable WHERE WebName = %s"  HOSTNAME
 }}}
@@ -16,7 +16,7 @@ DBDocRoot can be used at the Server or the Virtual Host level.
 
 
 = Details =
-*SQL* is an SQL statement which returns no more than one row, with the override directory as the first column.  This directory is used instead of the existing document root set by the [http://httpd.apache.org/docs/current/mod/core.html#documentroot DocumentRoot] directive.
+*SQL* is an SQL statement which returns no more than one row, with the directory in the first column.  This directory is used instead of the existing document root set by the [http://httpd.apache.org/docs/current/mod/core.html#documentroot DocumentRoot] directive.
 
 *PARAM ...* arguments are inserted into the SQL statement at request time.  Use one *PARAM* for each parameter marker in your SQL statement.  In the examples, *%s* is the parameter marker.  *PARAM* may be any of these words (space separated, not case sensitive):
 || *HOSTNAME*||requested hostname|| _may be NULL if there is no Host header. e.g. HTTP 1.0 or FTP requests_ ||
