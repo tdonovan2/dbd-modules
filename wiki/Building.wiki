@@ -16,7 +16,7 @@ NMAKE -f Makefile.win APACHE=C:\Apache2 install
 
     ===== Note for Apache version 2.2.6 or earlier =====
     Apache 2.2 prior to version 2.2.7 is missing several header files in the /include directory on Windows. See [http://issues.apache.org/bugzilla/show_bug.cgi?id=43715 Apache Bug 43715].
-    If you are using Apache 2.2.0 through 2.2.6, copy these header files from the Apache source directory (or the [http://svn.apache.org/viewvc/httpd/httpd/tags/ Apache SVN repository]) to the Apache \include directory:
+    If you are using Apache 2.2.0 through 2.2.6, copy these two header files from the Apache source directory (or the [http://svn.apache.org/viewvc/httpd/httpd/tags/ Apache SVN repository]) to the Apache \include directory:
       * modules\database\mod_dbd.h
       * modules\loggers\mod_log_config.h
 
