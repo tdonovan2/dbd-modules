@@ -29,6 +29,15 @@ Copyright 2008  Tom Donovan
 
 module AP_MODULE_DECLARE_DATA log_dbd_module;
 
+#if AP_MODULE_MAGIC_AT_LEAST(20100606,0)
+#define LOGLEVEL log.level
+#else
+#define LOGLEVEL loglevel
+#endif
+#ifdef APLOG_USE_MODULE
+APLOG_USE_MODULE(log_dbd);
+#endif 
+
 /* log_dbd_module server configuration */
 typedef struct {                
     apr_hash_t *files;
@@ -220,7 +229,7 @@ static apr_status_t write_fallback_log(request_rec *r,
             if (*s < ' ')
                 *s = ' ';
         ap_log_rerror(APLOG_MARK, 
-            (r->server->loglevel == APLOG_DEBUG) ? APLOG_DEBUG : APLOG_ERR, 
+            (r->server->LOGLEVEL == APLOG_DEBUG) ? APLOG_DEBUG : APLOG_ERR, 
             0, r, "mod_log_dbd: %s", str);
         return APR_EGENERAL;
     }
@@ -334,7 +343,7 @@ static apr_status_t write_log(request_rec *r,
     }
     else {
         /* DEBUG loglevel - generating SQL is a lot of work, so we check first */
-        if (r->server->loglevel == APLOG_DEBUG) {
+        if (r->server->LOGLEVEL == APLOG_DEBUG) {
             /* use a NULL handle to write SQL to error log */
             log_dbd_handle *dbghndl = apr_pmemdup(r->pool, handle, sizeof(log_dbd_handle));
             dbghndl->old_writer = NULL;
@@ -446,6 +455,12 @@ static void *config_server(apr_pool_t *p, server_rec *s)
         dbd_acquire_fn =
                     APR_RETRIEVE_OPTIONAL_FN(ap_dbd_acquire);
     }
+    conf->files = apr_hash_make(p);
+    return conf;
+}
+
+static int pre_config(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp)
+{
     if (!orig_writer_init) {
         module *mod_log_config = ap_find_linked_module("mod_log_config.c");
         orig_writer_init = log_set_writer_init_fn(log_writer_init);
@@ -457,16 +472,19 @@ static void *config_server(apr_pool_t *p, server_rec *s)
         if (mod_log_config && log_dbd_module.dynamic_load_handle)
             atexit(revert_writers);
     }
-    conf->files = apr_hash_make(p);
-    return conf;
+	return OK;
 }
-
 static const command_rec cmds[] =
 {
     AP_INIT_TAKE23("DBDLog", setAccessLogQuery, 
                    NULL, RSRC_CONF, "DBDLog  NAME  QUERY  [UseNULLs]"),
     {NULL}
 };
+static void register_hooks(apr_pool_t *p)
+{
+    static const char * const aszPred[]={ "mod_log_config.c", NULL };
+    ap_hook_pre_config(pre_config,aszPred,NULL,APR_HOOK_LAST);
+}
 
 module AP_MODULE_DECLARE_DATA log_dbd_module =
 {
@@ -476,5 +494,5 @@ module AP_MODULE_DECLARE_DATA log_dbd_module =
     config_server,              /* server config */
     merge_config_server,        /* merge server config */
     cmds,                       /* command apr_table_t */
-    NULL                        /* register hooks */
+    register_hooks              /* register hooks */
 };

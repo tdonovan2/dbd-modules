@@ -29,6 +29,15 @@ Copyright 2008  Tom Donovan
 
 module AP_MODULE_DECLARE_DATA vhost_dbd_module;
 
+#if AP_MODULE_MAGIC_AT_LEAST(20100606,0)
+#define LOGLEVEL log.level
+#else
+#define LOGLEVEL loglevel
+#endif
+#ifdef APLOG_USE_MODULE
+APLOG_USE_MODULE(vhost_dbd);
+#endif 
+
 /* Maximum number of parameters which can be passed to the query */
 #define MAX_PARAMS  100
 
@@ -271,7 +280,7 @@ static int setDocRoot(request_rec *r)
         }
 #endif
         /* DEBUG loglevel */
-        if (r->server->loglevel == APLOG_DEBUG) {
+        if (r->server->LOGLEVEL == APLOG_DEBUG) {
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
                 "mod_vhost_dbd: Successfully executed query: (stmt: %s) "
                 "returned %d row(s) %d column(s), key: [%s:%s:%s], "
@@ -298,7 +307,7 @@ static int setDocRoot(request_rec *r)
     else  {
         /* NO - we do not need to execute a query. Use the root we saved in conn_conf */
         newroot = conn_conf->root;
-        if (r->server->loglevel == APLOG_DEBUG) {
+        if (r->server->LOGLEVEL == APLOG_DEBUG) {
             /* DEBUG loglevel */
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
                 "mod_vhost_dbd: Using previous connection query (stmt: %s) "

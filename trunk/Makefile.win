@@ -9,9 +9,13 @@ APACHE=$(APR)
 !ERROR APACHE= must be specified
 !ENDIF 
 
+!IF "$(DEBUG)" == ""
 CFLAGS=/nologo /c /MD /W3 /O2 /Ob2 /Zi /I "$(APACHE)\include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "APU_DECLARE_EXPORT"
-
 LINK_FLAGS=/nologo /dll /release /debug /incremental:no /machine:I386 /libpath:"$(APACHE)\lib" 
+!ELSE
+CFLAGS=/nologo /c /MDd /W3 /Od /Zi /I "$(APACHE)\include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "APU_DECLARE_EXPORT"
+LINK_FLAGS=/nologo /dll /debug /incremental:no /machine:I386 /libpath:"$(APACHE)\lib" 
+!ENDIF
 
 all : mod_vhost_dbd.so mod_log_dbd.so
 
