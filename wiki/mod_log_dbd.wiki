@@ -41,9 +41,9 @@ DBDLog can be used at the Server or the Virtual Host level.
   
   * You must have [http://httpd.apache.org/docs/current/mod/mod_log_config.html mod_log_config] loaded and configured to use mod_log_dbd.  
 
-  * The [http://httpd.apache.org/docs/current/mod/mod_log_config.html mod_log_config] [http://httpd.apache.org/docs/current/mod/mod_so.html#loadmodule LoadModule] directive must occur *_before_* the mod_log_dbd [http://httpd.apache.org/docs/current/mod/mod_so.html#loadmodule LoadModule] directive in the Apache configuration file.
+  * The [http://httpd.apache.org/docs/current/mod/mod_so.html#loadmodule LoadModule] directives for both [http://httpd.apache.org/docs/current/mod/mod_log_config.html mod_log_config] and [http://httpd.apache.org/docs/current/mod/mod_dbd.html mod_dbd] must occur _*before*_ the [http://httpd.apache.org/docs/current/mod/mod_so.html#loadmodule LoadModule] directive for mod_log_dbd in the configuration file.
 
-  * Use [http://httpd.apache.org/docs/current/mod/mod_so.html#loadmodule LoadModule] to enable mod_log_dbd.
+  * Use [http://httpd.apache.org/docs/current/mod/mod_so.html#loadmodule LoadModule] to enable mod_log_dbd, like this:
 {{{
 LoadModule log_dbd_module modules/mod_log_dbd.so 
 }}}
