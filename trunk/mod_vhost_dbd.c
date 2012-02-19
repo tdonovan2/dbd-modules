@@ -436,8 +436,8 @@ static void *config_server(apr_pool_t *p, server_rec *s)
     return conf;
 }
 static void register_hooks(apr_pool_t *p)
-{
-    ap_hook_translate_name(setDocRoot,NULL,NULL,APR_HOOK_LAST);
+{   static const char * const aszSucc[]={ "mod_rewrite.c",NULL };
+    ap_hook_translate_name(setDocRoot,NULL,aszSucc,APR_HOOK_FIRST);
 }
 static const command_rec cmds[] =
 {
