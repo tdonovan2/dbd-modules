@@ -461,6 +461,12 @@ static void *config_server(apr_pool_t *p, server_rec *s)
 
 static int pre_config(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp)
 {
+    if (!log_set_writer_init_fn || !log_set_writer_fn) {
+        ap_log_perror(APLOG_MARK, APLOG_ERR, 0, plog, 
+                        "mod_log_config is required by mod_log_dbd");
+        return 500;    
+    }
+
     if (!orig_writer_init) {
         module *mod_log_config = ap_find_linked_module("mod_log_config.c");
         orig_writer_init = log_set_writer_init_fn(log_writer_init);
