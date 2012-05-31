@@ -6,9 +6,9 @@ mod_vhost_dbd has one directive:
 
 ==== DBDocRoot    SQL    `[` PARAM ... `]` ====
 
-mod_vhost_dbd overrides the document root directory for a request to a value returned by an SQL query.
+mod_vhost_dbd overrides the [http://httpd.apache.org/docs/current/mod/core.html#documentroot DocumentRoot] directory using an SQL query.
 
-The query returns the directory path in the first column.
+The query returns the new root directory as the first column of a single result row.  If no rows are returned by the query, the original [http://httpd.apache.org/docs/current/mod/core.html#documentroot DocumentRoot] directory is not replaced.
 {{{
 DBDocRoot "SELECT WebDir FROM WebTable WHERE WebName = %s"  HOSTNAME
 }}}
