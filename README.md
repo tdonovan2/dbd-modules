@@ -37,5 +37,5 @@ where `apachedir` is a top level Apache 2.2+ directory. For example:
     apxs -c mod_log_dbd.c
     apxs -i mod_log_dbd.la
 
-## Configuring and using [mod_log_dbd]
-## Configuring and using [mod_vhost_dbd]
+## [Configuring and using mod_log_dbd](mod_log_dbd)
+## [Configuring and using mod_vhost_dbd](mod_vhost_dbd)
